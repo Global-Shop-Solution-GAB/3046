@@ -1,0 +1,250 @@
+Program.Sub.ScreenSU.Start
+gui.Form1..create
+gui.Form1..caption("Unused Part Deletion")
+gui.Form1..size(3645,8235)
+gui.Form1..position(0,0)
+gui.Form1..event(unload,form1_unload)
+gui.Form1..alwaysontop(False)
+gui.Form1..fontname("Arial")
+gui.Form1..fontsize(8)
+gui.Form1..forecolor(0)
+gui.Form1..fontstyle(,,,,)
+gui.Form1..BackColor(-2147483633)
+gui.Form1..controlbox(True)
+gui.Form1..maxbutton(True)
+gui.Form1..minbutton(True)
+gui.Form1..mousepointer(0)
+gui.Form1..moveable(True)
+gui.Form1..sizeable(True)
+gui.Form1..ShowInTaskBar(True)
+gui.Form1..titlebar(True)
+gui.Form1.datepicker1.create(datepicker)
+gui.Form1.datepicker1.visible(True)
+gui.Form1.datepicker1.size(1935,285)
+gui.Form1.datepicker1.zorder(0)
+gui.Form1.datepicker1.position(700,300)
+gui.Form1.datepicker1.enabled(True)
+gui.Form1.datepicker2.create(datepicker)
+gui.Form1.datepicker2.visible(True)
+gui.Form1.datepicker2.size(1935,285)
+gui.Form1.datepicker2.zorder(0)
+gui.Form1.datepicker2.position(700,900)
+gui.Form1.datepicker2.enabled(True)
+gui.Form1.lbl1.create(label)
+gui.Form1.lbl1.caption("End Date")
+gui.Form1.lbl1.backstyle(0)
+gui.Form1.lbl1.visible(True)
+gui.Form1.lbl1.size(660,255)
+gui.Form1.lbl1.zorder(1)
+gui.Form1.lbl1.position(950,700)
+gui.Form1.lbl1.enabled(True)
+gui.Form1.lbl1.fontname("Arial")
+gui.Form1.lbl1.fontsize(8)
+gui.Form1.lbl1.BackColor(-2147483633)
+gui.Form1.lbl2.create(label)
+gui.Form1.lbl2.caption("Beg Date")
+gui.Form1.lbl2.backstyle(0)
+gui.Form1.lbl2.visible(True)
+gui.Form1.lbl2.size(765,255)
+gui.Form1.lbl2.zorder(1)
+gui.Form1.lbl2.position(950,100)
+gui.Form1.lbl2.enabled(True)
+gui.Form1.lbl2.fontname("Arial")
+gui.Form1.lbl2.fontsize(8)
+gui.Form1.lbl2.BackColor(-2147483633)
+gui.Form1.cmdCalc.create(button)
+gui.Form1.cmdCalc.caption("Calculate")
+gui.Form1.cmdCalc.visible(True)
+gui.Form1.cmdCalc.size(855,375)
+gui.Form1.cmdCalc.zorder(0)
+gui.Form1.cmdCalc.position(1260,1375)
+gui.Form1.cmdCalc.enabled(True)
+gui.Form1.cmdCalc.fontname("Arial")
+gui.Form1.cmdCalc.fontsize(8)
+gui.Form1.cmdCalc.event(click,cmdcalc_click)
+gui.Form1.cmdDel.create(button)
+gui.Form1.cmdDel.caption("Delete")
+gui.Form1.cmdDel.visible(True)
+gui.Form1.cmdDel.size(855,375)
+gui.Form1.cmdDel.zorder(0)
+gui.Form1.cmdDel.position(1800,7200)
+gui.Form1.cmdDel.enabled(True)
+gui.Form1.cmdDel.fontname("Arial")
+gui.Form1.cmdDel.fontsize(8)
+gui.Form1.cmdDel.event(click,cmddel_click)
+gui.Form1.lvwParts.create(listview)
+gui.Form1.lvwParts.view(3)
+gui.Form1.lvwParts.addlistviewcolumn("Part",1455,0)
+gui.Form1.lvwParts.addlistviewcolumn("Last Used",1000,0)
+gui.Form1.lvwParts.visible(True)
+gui.Form1.lvwParts.size(3105,5115)
+gui.Form1.lvwParts.zorder(0)
+gui.Form1.lvwParts.position(175,1920)
+gui.Form1.lvwParts.enabled(True)
+gui.Form1.lvwParts.fontname("Arial")
+gui.Form1.lvwParts.fontsize(8)
+gui.Form1.cmdExport.create(button)
+gui.Form1.cmdExport.caption("Export")
+gui.Form1.cmdExport.visible(True)
+gui.Form1.cmdExport.size(855,375)
+gui.Form1.cmdExport.zorder(0)
+gui.Form1.cmdExport.position(700,7200)
+gui.Form1.cmdExport.enabled(True)
+gui.Form1.cmdExport.fontname("Arial")
+gui.Form1.cmdExport.fontsize(8)
+gui.Form1.cmdExport.event(click,cmdexport_click)
+
+
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+
+
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+' Inventory part deletes based on last usage info
+' 6/11/08 JSO
+' 7/18/08 added export to Excel
+' Custom hook and menu item
+
+
+Function.Odbc.Connection!Con.Openconnection(Variable.Ambient.pdsn,Variable.Ambient.PUser,Variable.Ambient.PPass)
+
+Gui.Form1.cmdDel.Enabled(False)
+
+
+Gui.Form1..Show
+
+Program.Sub.Main.End
+
+program.sub.cmdcalc_click.start
+Variable.Local.dBegDate.Declare(Date)
+Variable.Local.dEndDate.Declare(Date)
+Variable.Local.sBegDate.Declare(String)
+Variable.Local.sEndDate.Declare(String)
+Variable.Local.iCounter.Declare(Long)
+Variable.Local.sSql.Declare(String)
+
+Variable.Local.iCounter.Set(0)
+
+Gui.Form1.lvwParts.ClearItems
+Gui.Form1.lvwParts.MultiSelect(true)
+
+Variable.Local.dBegDate.Set(Variable.Screen.Form1!datepicker1.Value)
+Variable.Local.dEndDate.Set(Variable.Screen.Form1!datepicker2.Value)
+Function.Intrinsic.string.format(Variable.Local.dBegDate,"Yyyy-Mm-Dd",Variable.Local.sBegDate)
+Function.Intrinsic.string.format(Variable.Local.dEndDate,"Yyyy-Mm-Dd",Variable.Local.sEndDate)
+
+Function.Intrinsic.string.Concat("SELECT PART, DATE_LAST_USAGE FROM V_INVENTORY_MSTR WHERE DATE_LAST_USAGE BETWEEN '",V.Local.sBegDate,"' and '",V.Local.sEndDate,"'",Variable.Local.sSql)
+Function.ODBC.Connection!Con.OpenRecordsetRO("rst1",Variable.local.sSql)
+Function.Intrinsic.Control.DoUntil(Variable.Odbc.Con!rst1.EOF,=,True)
+	Gui.Form1.lvwParts.AddListItem(Variable.Local.iCounter,Variable.Odbc.Con!rst1.FieldVal!PART)
+	Gui.Form1.lvwParts.SetListItemSubItemText(Variable.Local.iCounter,1,Variable.ODBC.Con!rst1.FieldVal!DATE_LAST_USAGE)
+	Function.Intrinsic.Math.Add(Variable.Local.iCounter,1,Variable.Local.iCounter)
+	Function.ODBC.CON!RST1.MoveNext
+Function.Intrinsic.Control.Loop
+Function.ODBC.Con!rst1.Close
+
+
+Gui.Form1.cmdDel.Enabled(True)
+
+program.sub.cmdcalc_click.end
+
+program.sub.cmddel_click.start
+Variable.Local.sPart.Declare(String)
+Variable.Local.sPartText.Declare(String)
+Variable.local.retvar.declare(String)
+Variable.Local.i.Declare(Long)
+Variable.Local.lOrd.Declare(Long)
+Variable.Local.sSql.Declare(String)
+Variable.Local.sDelSql.Declare(String)
+Variable.Local.retval.declare(Long)
+
+
+Gui.Form1.lvwParts.retrieveselectedlistitems(Variable.Local.sPart)
+Function.Intrinsic.string.split(Variable.Local.sPart,"*!*",Variable.Local.retVar)
+Function.Intrinsic.Control.For(Variable.Local.i,Variable.Local.retVar.LBound,Variable.Local.retvar.UBound,1)
+	Gui.Form1.lvwParts.listitemkeytoordinal(Variable.Local.retVar(variable.Local.i),Variable.Local.lOrd)
+	Variable.Local.sPartText.Set(Variable.Screen.Form1!lvwParts.ListItemText(variable.Local.lOrd))
+	' build sql condition with sPLText
+	Function.Intrinsic.Control.If(Variable.Local.i,=,Variable.Local.retVar.UBound)
+		Function.Intrinsic.String.Concat(Variable.Local.sSql,"'",V.Local.sPartText.rtrim,"'",Variable.Local.sSql)
+	Function.Intrinsic.Control.Else
+		Function.Intrinsic.String.Concat(Variable.Local.sSql,"'",V.Local.sPartText.rtrim,"',",Variable.Local.sSql)
+	Function.intrinsic.control.endif
+Function.Intrinsic.Control.Next(Variable.Local.i)
+
+Function.intrinsic.UI.Msgbox("Are you sure you want to delete the highlighted PARTS?","Delete Confirm",4,Variable.Local.retval)
+Function.Intrinsic.Control.If(Variable.Local.retval,=,6)
+	Function.Intrinsic.string.Concat("DELETE FROM INVENTORY_MSTR WHERE PART IN (",Variable.Local.sSql,")",Variable.Local.sDelSql)
+	Function.ODBC.Connection!Con.Execute(Variable.Local.sDelSql)
+	Function.Intrinsic.string.Concat("DELETE FROM INVENTORY_MST2 WHERE PART IN (",Variable.Local.sSql,")",Variable.Local.sDelSql)
+	Function.ODBC.Connection!Con.Execute(Variable.Local.sDelSql)
+	Function.Intrinsic.string.Concat("DELETE FROM INVENTORY_MST3 WHERE PART IN (",Variable.Local.sSql,")",Variable.Local.sDelSql)
+	Function.ODBC.Connection!Con.Execute(Variable.Local.sDelSql)
+	Function.Intrinsic.string.Concat("DELETE FROM ITEM_MASTER WHERE PART IN (",Variable.Local.sSql,")",Variable.Local.sDelSql)
+	Function.ODBC.Connection!Con.Execute(Variable.Local.sDelSql)
+
+	Function.Intrinsic.UI.Msgbox("Part(s) deleted from Inventory and Item master files")
+	Gui.Form1.lvwParts.ClearItems
+Function.Intrinsic.Control.endif
+
+
+
+program.sub.cmddel_click.end
+
+program.sub.form1_unload.start
+Function.Intrinsic.Control.End
+Function.ODBC.Connection!Con.Close
+
+program.sub.form1_unload.end
+
+program.sub.cmdexport_click.start
+Variable.Local.sParts.Declare(String)
+Variable.Local.sPart.Declare(String)
+Variable.Local.i.Declare(Long)
+Variable.Local.lOrd.Declare(Long)
+Variable.Local.sPartList.Declare(String)
+Variable.Local.iRow.Declare(Long)
+Variable.Local.iColumn.declare(Long)
+Variable.Local.handle.Declare(Long)
+Variable.Local.params.Declare(String)
+Variable.Local.dir.Declare(String)
+Variable.Local.show.Declare(Long)
+Variable.Local.sFile.Declare(String)
+Variable.Local.sUnique.Declare(String)
+
+Variable.Local.i.Set(0)
+Variable.Local.lOrd.Set(0)
+Variable.Local.iRow.Set(1)
+Variable.Local.iColumn.Set(1)
+
+Function.Intrinsic.String.Replace(Variable.Ambient.Now,":","",Variable.Local.sUnique)
+Function.Intrinsic.String.Replace(Variable.local.sUnique,"/","",Variable.Local.sUnique)
+Function.Intrinsic.UI.Msgbox(Variable.local.sUnique)
+Function.Intrinsic.String.Concat("c:\Delparts-",Variable.local.sUnique,".xls",Variable.Local.sFile)
+Function.Automation.MSExcel.CreateAppObject("MSExcel")
+Function.Automation.MSExcel.CreateWorkbook("MSExcel","ExcelWB",Variable.Local.sFile)
+Function.Automation.MSExcel.OpenWorksheet("ExcelWB","ExcelWS",1)
+
+Gui.Form1.lvwParts.RetrieveSelectedListItems(Variable.Local.sPartList)
+Function.Intrinsic.string.split(Variable.Local.sPartList,"*!*",Variable.Local.sPart)
+Function.intrinsic.Control.For(Variable.Local.i,Variable.Local.sPart.LBound,Variable.Local.sPart.UBound,1)
+	Gui.Form1.lvwParts.listitemkeytoordinal(Variable.Local.sPart(variable.Local.i),Variable.Local.lOrd)
+	Variable.Local.sPart.Set(Variable.Screen.Form1!lvwParts.ListItemText(variable.Local.lOrd))
+		Function.Automation.MSExcel.WriteCell("ExcelWS",Variable.Local.iRow,Variable.Local.iColumn,Variable.Local.sPart)
+		Function.Intrinsic.Math.Add(Variable.Local.iRow,1,Variable.Local.iRow)
+Function.Intrinsic.Control.Next(Variable.Local.i)
+
+Function.Automation.MSExcel.SaveWorkbook("ExcelWB")
+
+Function.Automation.generic.DestroyObject("ExcelWS")
+Function.Automation.generic.DestroyObject("ExcelWB")
+Function.Automation.Generic.DestroyObject("MSExcel")
+
+Function.Intrinsic.Task.ShellExec(Variable.local.handle,"Open",Variable.Local.sFile,Variable.local.params,Variable.local.dir,Variable.Local.show)
+
+program.sub.cmdexport_click.end
+
+
